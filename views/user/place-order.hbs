@@ -1,0 +1,122 @@
+<section>
+    <div class="container mt-5">
+        <form id="checkout-form">
+            <div class="row">
+                <div class="col-md-6">
+                    <h2>Enter Shipping details</h2><br>
+                    <div>
+                        <label for="">Address</label>
+
+                        <input type="text" name="address" id="address" class="form-control">
+                        <label for="">Pincode</label>
+                        <input type="text" name="pincode" id="pincode" class="form-control">
+                        <label for="">Mobile number</label>
+                        <input type="text" name="mobile" id="mobile" class="form-control">
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="container mt-5 ml-5 checkout">
+                        <h5>Total amount: Rs.{{total}}</h5>
+                        <hr>
+                        <div class="payment">
+                            <p>Payment Method</p> 
+                            <label class="radio-inline">
+                                <input type="radio" name="payment-method" value="COD" checked>COD
+                            </label>
+                            <label class="radio-inline mt-2">
+                                <input type="radio" name="payment-method" value="ONLINE" >Online payment
+                            </label>
+                            <input type="text" name="userId" value="{{user._id}}" hidden>
+                            <button class="btn btn-primary float-right" type="submit">Checkout</button>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </form>
+    </div>
+</section>
+<style>
+    input[type=radio]{
+        width: 20px;
+        height: 20px;
+    }
+    label.radio-inline{
+        display: flex;
+        align-items: center;
+    }
+    .checkout{
+        border: 1px solid;
+        border-radius: 3px;
+    }
+    .payment{
+        padding-bottom: 56px;
+    }
+</style>
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script>
+    $('#checkout-form').submit((e)=>{
+        e.preventDefault()
+        $.ajax({
+            url:'/place-order',
+            method:'post',
+            data:$('#checkout-form').serialize(),
+            success:(response)=>{
+                alert(response)
+                if(response.codSuccess){
+                    location.href='/confirm-order'
+                }else{
+                    razorpaypayment(response)
+                }
+            }
+        })
+    })
+
+    function razorpaypayment(order){
+        var options = {
+    "key": "rzp_test_lWAtz2c0Foyv22", // Enter the Key ID generated from the Dashboard
+    "amount": order.amount, // Amount is in currency subunits. Default currency is INR. Hence, 50000 refers to 50000 paise
+    "currency": "INR",
+    "name": "Shopping cart",
+    "description": "Test Transaction",
+    "image": "https://example.com/your_logo",
+    "order_id": order.id, //This is a sample Order ID. Pass the `id` obtained in the response of Step 1
+    "handler": function (response){
+        
+        verifyPayment(response, order)
+    },
+    "prefill": {
+        "name": "Gaurav Kumar",
+        "email": "gaurav.kumar@example.com",
+        "contact": "9999999999"
+    },
+    "notes": {
+        "address": "Razorpay Corporate Office"
+    },
+    "theme": {
+        "color": "#F37254"
+    }
+};
+var rzp1 = new Razorpay(options);
+    rzp1.open()
+
+    }
+    
+    function verifyPayment(payment, order){
+        $.ajax({
+            url:'/verify-payment',
+            method:'post',
+            data:{
+                payment,
+                order
+            },
+            success:(response)=>{
+                if(response.status){
+                    location.href='/confirm-order'
+                }else{
+                    alert('payment failed')
+                }
+            }
+        })
+    }
+</script>
