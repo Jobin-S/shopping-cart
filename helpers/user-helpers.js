@@ -204,10 +204,15 @@ module.exports = {
                         item:1, quantity:1,product:{ $arrayElemAt: ['$product',0]}
                     }
                 },
+                 { $addFields: {
+                convertprice: {$toInt: "$product.Price" }   
+             }
+                
+            },
                 {   
                     $group:{
                         _id:null,
-                        total:{$sum:{$multiply:['$quantity', '$product.Price']}}
+                        total:{$sum:{$multiply:['$quantity', '$convertprice']}}
                     }
                 }
                 
