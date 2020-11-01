@@ -30,5 +30,14 @@ module.exports = {
                 resolve({status:true})
             })
         });
+    },
+    doLogin:(userData)=>{
+        return new Promise(async(resolve, reject)=>{
+            if(userData.email == "admin@admin.com" && userData.password == 'admin123'){
+                resolve({status:true})
+            }else{
+                reject({status:false})
+            }
+        })
     }
 }

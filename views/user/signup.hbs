@@ -1,4 +1,53 @@
-<div class="row">
+<section class="login_part padding_top">
+        <div class="container">
+            <div class="row align-items-center">
+                
+                <div class="col-lg-6 col-md-6">
+                    <div class="login_part_form">
+                        <div class="login_part_form_iner" >
+                            <h3>Welcome to our shop <br>
+                                Please register an account</h3>
+                            <form class="row contact_form"action="/signup" method="POST" >
+                                <div class="col-md-12 form-group p_star">
+                                    <input required='required' type="name" class="form-control" id="name" name="Name" value=""
+                                        placeholder="Name">
+                                </div>
+                                <div class="col-md-12 form-group p_star">
+                                    <input required='required' type="email" class="form-control" id="name" name="Email" value=""
+                                        placeholder="Email">
+                                </div>
+                                <div class="col-md-12 form-group p_star">
+                                    <input required='required' type="password" class="form-control" id="password" name="Password" value=""
+                                        placeholder="Password">
+                                </div>
+                                <div class="col-md-12 form-group">
+                                    {{!-- <div class="creat_account d-flex align-items-center">
+                                        <input type="checkbox" id="f-option" name="selector">
+                                        <label for="f-option">Remember me</label>
+                                    </div> --}}
+                                    <button type="submit" value="submit" class="btn_3">
+                                        Signup
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-6 col-md-6">
+                    <div class="login_part_text text-center" style="    background-image: -webkit-linear-gradient(16deg, #8312ff 0%, #f31584 64%, #a75d9e 100%);">
+                        <div class="login_part_text_iner">
+                            <h2>Already our customer?</h2>
+                            <p>Welcome back to our shop please login from here.</p>
+                            <a href="/login" class="btn_3">Login</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+{{!-- <div class="row">
     <div class="col-md-6 m-auto">
         <div class="container mt-5 pl-4">
             <h2 class="text-center">Login</h2>
@@ -21,4 +70,4 @@
             </form>
         </div>
     </div>
-</div>
+</div> --}}

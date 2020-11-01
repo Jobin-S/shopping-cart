@@ -41,7 +41,8 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(fileUpload())
 
-app.use(session({secret:'key',resave:true, saveUninitialized:true, cookie:{maxAge:600000}}))
+let sessionTime = new Date(Date.now() + (30 * 86400 * 1000))
+app.use(session({secret:'key',resave:true, saveUninitialized:true, cookie:{maxAge:sessionTime}}))
 app.use('/', userRouter);
 app.use('/admin', adminRouter);
 

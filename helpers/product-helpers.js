@@ -7,6 +7,7 @@ var objectId = require('mongodb').ObjectID;
 module.exports = {
     addProduct: (product, callback) => {
         console.log(product);
+        product.Price = parseInt(product.Price)
         db.get().collection(collection.PRODUCT_COLLECTION).insertOne(product).then((data) => {
             callback(data.ops[0]._id)
         })

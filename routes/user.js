@@ -6,7 +6,7 @@ var userHelpers = require('../helpers/user-helpers')
 
 
 const verifyLogin = (req, res, next)=>{
-  if(req.session.LoggedIn){
+  if(req.session.userLoggedIn){
     next()
   }else{
     res.redirect('/login')
@@ -27,11 +27,11 @@ router.get('/',async function (req, res, next) {
 });
 
 router.get('/login',(req, res) => {
-  if(req.session.LoggedIn)
+  if(req.session.userLoggedIn)
     res.redirect('/')
   else{
-    res.render('user/login',{"loginErr":req.session.loginErr})
-    req.session.loginErr = false
+    res.render('user/login',{"userloginErr":req.session.userloginErr})
+    req.session.userloginErr = false
   }
 
 })
@@ -48,8 +48,9 @@ router.get('/signup',(req, res) => {
 router.post('/signup',(req, res)=>{
   userHelpers.doSignup(req.body).then((response)=>{
     
-      req.session.LoggedIn = true
       req.session.user = response
+      req.session.userLoggedIn = true
+
       res.redirect('/')
     
     
@@ -59,17 +60,19 @@ router.post('/signup',(req, res)=>{
 router.post('/login',(req,res)=>{
   userHelpers.doLogin(req.body).then((response)=>{
     if(response.status){
-      req.session.LoggedIn = true;
       req.session.user =  response.user
+      req.session.userLoggedIn = true;
+
       res.redirect('/')
     }else{
-      req.session.loginErr = "Username or password is incorrect"
+      req.session.userloginErr = "Username or password is incorrect"
       res.redirect('/login')
     }
   })
 })
 router.get('/logout',(req,res)=>{
-  req.session.destroy()
+  req.session.user = null;
+  req.session.userLoggedIn = false
   res.redirect('/')
 })
 
@@ -85,11 +88,16 @@ router.get('/cart',verifyLogin,async (req, res)=>{
   res.render('user/cart', {user, products, total})
 })
 
-router.get('/add-to-cart/:id',verifyLogin, (req, res)=>{
+router.get('/add-to-cart/:id', (req, res)=>{
   console.log('api call');
-  userHelpers.addToCart(req.params.id, req.session.user._id).then(()=>{
-    res.json({status:true})
-  })
+  console.log(req.session.user);
+  if(req.session.userLoggedIn){
+    userHelpers.addToCart(req.params.id, req.session.user._id).then(()=>{
+      res.json({status:true})
+    })
+  }else if(req.session.user == undefined){
+    res.redirect('/login')
+  }
 })
 
 router.post('/change-product-quantity',(req, res)=>{
@@ -110,7 +118,12 @@ router.post('/remove-item',(req, res)=>{
 router.get('/place-order',verifyLogin,async(req, res)=>{
   let user = req.session.user
   let total = await userHelpers.getTotalAmount(user._id)
-  res.render('user/place-order',{user, total})
+  userHelpers.getCartProducts(user._id).then((cartItems)=>{
+    console.log(cartItems)
+    res.render('user/place-order', {user, total, cartItems})
+
+  })
+
 })
 
 router.post('/place-order',async (req, res)=>{
@@ -132,14 +145,29 @@ router.post('/place-order',async (req, res)=>{
 } )
 
 router.get('/confirm-order',verifyLogin, (req, res)=>{
-  res.render('user/confirm-order',{user:req.session.user})
+ 
+    if(req.session.user.orderId == null){
+      res.redirect('/orders')
+    }else{
+      userHelpers.getSingleOrder(req.session.user.orderId).then(async (order)=>{
+        let products =await userHelpers.getOrderProducts(req.session.user.orderId)
+        
+          res.render('user/confirm-order',{user:req.session.user, order, products})
+          req.session.user.orderId = null;
+        })     
+    }
 })
 
-router.get('/orders', verifyLogin,async (req,res)=>{
-  let orders =await userHelpers.getUserOrders(req.session.user._id)
-  console.log(orders)
-  orders.reverse()
-  res.render('user/orders', {user:req.session.user, orders})
+router.get('/orders',async (req,res)=>{
+  if(req.session.userLoggedIn){
+    let orders =await userHelpers.getUserOrders(req.session.user._id)
+    console.log(orders)
+    orders.reverse()
+    res.render('user/orders', {user:req.session.user, orders})
+  }else{
+    res.redirect('/login')
+  }
+  
 })
 
 router.get('/view-order-products/:id',verifyLogin, async (req, res)=>{
@@ -150,10 +178,12 @@ router.get('/view-order-products/:id',verifyLogin, async (req, res)=>{
 
 router.post('/verify-payment',(req, res)=>{
   console.log('verify login')
-  console.log(req.body)
-  console.log("recipt: ",req.body['order[receipt]'])
+  // console.log(req.body)
+  // console.log("recipt: ",req.body['order[receipt]'])
   userHelpers.verifyPayment(req.body).then(()=>{
-    userHelpers.changePaymentStatus(req.body['order[receipt]']).then(()=>{
+    console.log('verify payment :');
+    userHelpers.changePaymentStatus(req.body['order[receipt]']).then(()=>{  
+      req.session.user.orderId = req.body['order[receipt]']
       res.json({status:true})
     })
   }).catch((err)=>{

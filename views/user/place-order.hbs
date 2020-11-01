@@ -1,4 +1,234 @@
-<section>
+<!--================Checkout Area =================-->
+<section class="checkout_area padding_top">
+    <div class="container">
+        {{!-- <div class="returning_customer">
+        <div class="check_title">
+          <h2>
+            Returning Customer?
+            <a href="#">Click here to login</a>
+          </h2>
+        </div>
+        <p>
+          If you have shopped with us before, please enter your details in the
+          boxes below. If you are a new customer, please proceed to the
+          Billing & Shipping section.
+        </p>
+        <form class="row contact_form" action="#" method="post" novalidate="novalidate">
+          <div class="col-md-6 form-group p_star">
+            <input type="text" class="form-control" id="name" name="name" value=" " />
+            <span class="placeholder" data-placeholder="Username or Email"></span>
+          </div>
+          <div class="col-md-6 form-group p_star">
+            <input type="password" class="form-control" id="password" name="password" value="" />
+            <span class="placeholder" data-placeholder="Password"></span>
+          </div>
+          <div class="col-md-12 form-group">
+            <button type="submit" value="submit" class="btn_3">
+              log in
+            </button>
+            <div class="creat_account">
+              <input type="checkbox" id="f-option" name="selector" />
+              <label for="f-option">Remember me</label>
+            </div>
+            <a class="lost_pass" href="#">Lost your password?</a>
+          </div>
+        </form>
+      </div> --}}
+
+        <div class="billing_details">
+            <div class="row">
+                <div class="col-lg-8">
+                    <h3>Shipping Details</h3>
+                    <form id="checkout-form" class="row contact_form" action="#" method="post" >
+                        <div class="col-md-6 form-group ">
+                            <input required='required' type="text" placeholder="Enter your name" class="form-control" id="first" name="name" />
+                            <span class="placeholder" ></span>
+                        </div>
+
+                        <div class="col-md-6 form-group ">
+                            <input required='required' type="text" class="form-control" placeholder="Phone number" id="number" name="mobile" />
+                            
+                        </div>
+                        <div class="col-md-6 form-group ">
+                            <input type="email" placeholder="Email Address" class="form-control" id="email" name="email" />
+                        </div>
+
+                        <div class="col-md-12 form-group ">
+                            <input required='required' type="text" placeholder="House name/Aprt no" class="form-control" id="add1" name="addLine1" />
+                        </div>
+                        <div class="col-md-12 form-group ">
+                            <input required='required' type="text" placeholder="Street Address" class="form-control" id="add2" name="addLine2" />
+                        </div>
+                        <div class="col-md-12 form-group ">
+                            <input required='required' type="text" placeholder="Town/City" class="form-control" id="city" name="city" />
+                        </div>
+
+                        <div class="col-md-12 form-group">
+                            <input required='required' type="text" class="form-control" id="zip" name="pincode"
+                                placeholder="Postcode/ZIP" />
+                        </div>
+                        <div class="cupon_area">
+                            <div class="check_title">
+                                <h2>
+                                    Have a coupon?
+                                    <a href="#">Click here to enter your code</a>
+                                </h2>
+                            </div>
+                            <input type="text" placeholder="Enter coupon code" />
+                            <a class="tp_btn" href="#">Apply Coupon</a>
+                        </div>
+
+
+
+                </div>
+                <div class="col-lg-4">
+                    <div class="order_box">
+                        <h2>Your Order</h2>
+                        <ul class="list">
+                            <li>
+                                <a href="#">Product
+                                    <span>Total</span>
+                                </a>
+                            </li>
+                            {{#each cartItems}}
+                            <li>
+                                <a href="#">{{product.name}}
+                                    <span class="middle">x{{quantity}}</span>
+                                    <span class="last">Rs {{product.Price}}</span>
+                                </a>
+                            </li>
+                            {{/each}}
+
+                        </ul>
+                        <ul class="list list_2">
+                            <li>
+                                <a href="#">Subtotal
+                                    <span>Rs&nbsp; <span id="subTotal">{{total}}</span> </span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#">Shipping
+                                    <span>Rs&nbsp;<span id="shipping">80</span></span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#">Total
+                                    <span>Rs&nbsp; <span id="totalPrice"> </span></span>
+                                </a>
+                            </li>
+                        </ul>
+                        <div class="payment_item">
+                            <div class="radion_btn">
+                                <input type="radio" id="f-option5" name="payment-method" value="COD" />
+                                <label for="f-option5">Cash On Delivery</label>
+                                <div class="check"></div>
+                            </div>
+                            <p>
+                                Pay only when the product reached home.
+                            </p>
+                        </div>
+                        <div class="payment_item active">
+                            <div class="radion_btn">
+                                <input type="radio" id="f-option6" name="payment-method" value="ONLINE" checked />
+                                <label for="f-option6">Online payment </label>
+                                <img src="./images/card.jpg" alt="" />
+                                <div class="check"></div>
+                            </div>
+                            <p>
+                                UPI, Debit and Credit cards EMI and Paylater available.
+                            </p>
+                        </div>
+                        <input type="text" name="userId" value="{{user._id}}" hidden>
+                        <button class="btn_3" type="submit">Proceed to Payment</button>
+                        
+                    </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+<!--================End Checkout Area =================-->
+
+
+
+
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script>
+    let subTotal = parseInt(document.getElementById('subTotal').innerHTML)
+    let shippingCharge = parseInt(document.getElementById('shipping').innerHTML)
+    document.getElementById('totalPrice').innerHTML = subTotal + shippingCharge;
+
+
+
+    $('#checkout-form').submit((e) => {
+        e.preventDefault()
+        $.ajax({
+            url: '/place-order',
+            method: 'post',
+            data: $('#checkout-form').serialize(),
+            success: (response) => {
+                alert(response)
+                if (response.codSuccess) {
+                    location.href = '/confirm-order'
+                } else {
+                    razorpaypayment(response)
+                }
+            }
+        })
+    })
+
+    function razorpaypayment(order) {
+        var options = {
+            "key": "rzp_test_lWAtz2c0Foyv22", // Enter the Key ID generated from the Dashboard
+            "amount": order.amount, // Amount is in currency subunits. Default currency is INR. Hence, 50000 refers to 50000 paise
+            "currency": "INR",
+            "name": "Shopping cart",
+            "description": "Test Transaction",
+            "image": "https://example.com/your_logo",
+            "order_id": order.id, //This is a sample Order ID. Pass the `id` obtained in the response of Step 1
+            "handler": function (response) {
+
+                verifyPayment(response, order)
+            },
+            "prefill": {
+                "name": "Gaurav Kumar",
+                "email": "gaurav.kumar@example.com",
+                "contact": "9999999999"
+            },
+            "notes": {
+                "address": "Razorpay Corporate Office"
+            },
+            "theme": {
+                "color": "#F37254"
+            }
+        };
+        var rzp1 = new Razorpay(options);
+        rzp1.open()
+
+    }
+
+    function verifyPayment(payment, order) {
+        $.ajax({
+            url: '/verify-payment',
+            method: 'post',
+            data: {
+                payment,
+                order
+            },
+            success: (response) => {
+                if (response.status) {
+                    alert('payment successfull done')
+                    location.href = '/confirm-order'
+                } else {
+                    alert('payment failed')
+                }
+            }
+        })
+    }
+</script>
+
+{{!-- <section>
     <div class="container mt-5">
         <form id="checkout-form">
             <div class="row">
@@ -19,12 +249,12 @@
                         <h5>Total amount: Rs.{{total}}</h5>
                         <hr>
                         <div class="payment">
-                            <p>Payment Method</p> 
+                            <p>Payment Method</p>
                             <label class="radio-inline">
                                 <input type="radio" name="payment-method" value="COD" checked>COD
                             </label>
                             <label class="radio-inline mt-2">
-                                <input type="radio" name="payment-method" value="ONLINE" >Online payment
+                                <input type="radio" name="payment-method" value="ONLINE">Online payment
                             </label>
                             <input type="text" name="userId" value="{{user._id}}" hidden>
                             <button class="btn btn-primary float-right" type="submit">Checkout</button>
@@ -34,89 +264,6 @@
 
             </div>
         </form>
+
     </div>
-</section>
-<style>
-    input[type=radio]{
-        width: 20px;
-        height: 20px;
-    }
-    label.radio-inline{
-        display: flex;
-        align-items: center;
-    }
-    .checkout{
-        border: 1px solid;
-        border-radius: 3px;
-    }
-    .payment{
-        padding-bottom: 56px;
-    }
-</style>
-<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
-<script>
-    $('#checkout-form').submit((e)=>{
-        e.preventDefault()
-        $.ajax({
-            url:'/place-order',
-            method:'post',
-            data:$('#checkout-form').serialize(),
-            success:(response)=>{
-                alert(response)
-                if(response.codSuccess){
-                    location.href='/confirm-order'
-                }else{
-                    razorpaypayment(response)
-                }
-            }
-        })
-    })
-
-    function razorpaypayment(order){
-        var options = {
-    "key": "rzp_test_lWAtz2c0Foyv22", // Enter the Key ID generated from the Dashboard
-    "amount": order.amount, // Amount is in currency subunits. Default currency is INR. Hence, 50000 refers to 50000 paise
-    "currency": "INR",
-    "name": "Shopping cart",
-    "description": "Test Transaction",
-    "image": "https://example.com/your_logo",
-    "order_id": order.id, //This is a sample Order ID. Pass the `id` obtained in the response of Step 1
-    "handler": function (response){
-        
-        verifyPayment(response, order)
-    },
-    "prefill": {
-        "name": "Gaurav Kumar",
-        "email": "gaurav.kumar@example.com",
-        "contact": "9999999999"
-    },
-    "notes": {
-        "address": "Razorpay Corporate Office"
-    },
-    "theme": {
-        "color": "#F37254"
-    }
-};
-var rzp1 = new Razorpay(options);
-    rzp1.open()
-
-    }
-    
-    function verifyPayment(payment, order){
-        $.ajax({
-            url:'/verify-payment',
-            method:'post',
-            data:{
-                payment,
-                order
-            },
-            success:(response)=>{
-                if(response.status){
-                    location.href='/confirm-order'
-                }else{
-                    alert('payment failed')
-                }
-            }
-        })
-    }
-</script>
+</section> --}}

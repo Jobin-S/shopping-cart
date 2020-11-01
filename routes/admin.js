@@ -2,20 +2,33 @@ var express = require('express');
 const { Db } = require('mongodb');
 var router = express.Router();
 var productHelpers = require('../helpers/product-helpers')
-var adminHelpers = require('../helpers/admin-helpers')
+var adminHelpers = require('../helpers/admin-helpers');
+const { response } = require('express');
 
+const verifyAdmin = (req, res, next)=>{
+  if(req.session.adminLoggedIn){
+    next()
+  }else{
+    res.redirect('/admin/login')
+  }
+}
 
 /* GET users listing. */
 router.get('/', function (req, res, next) {
+  if(req.session.adminLoggedIn){
+    productHelpers.getAllProducts().then((products) => {
+      res.render('admin/show-products', {admin: true, products});
+    })
+  }else{
+    res.redirect('/admin/login')
+  }
 
-  productHelpers.getAllProducts().then((products) => {
-    res.render('admin/show-products', {admin: true, products});
-  })
+  
 
  
 });
 
-router.get('/add-product', (req, res) => {
+router.get('/add-product', verifyAdmin, (req, res) => {
   res.render('admin/add-product', {
     admin: true
   })
@@ -60,7 +73,7 @@ router.post('/edit-product/:id',(req, res)=>{
   })
 })
 
-router.get('/orders',async (req, res)=>{
+router.get('/orders',verifyAdmin,async (req, res)=>{
   let orders =await adminHelpers.getAllOrders()
   orders.reverse()
   console.log(orders)
@@ -78,6 +91,30 @@ router.get('/update-order/:id', (req, res)=>{
 router.post('/updateOrderStatus', (req, res)=>{
   adminHelpers.updateProductStatus(req.body).then((response)=>{
     res.json(response)
+  })
+})
+
+router.get('/login', (req,res)=>{
+  let adminLoginErr = req.session.adminloginErr
+  if(req.session.adminLoggedIn){
+    res.redirect('/admin')
+  }else{
+    res.render('admin/login',{adminLoginErr, admin:true})
+    req.session.adminLoggedIn = false
+  }
+})
+
+router.post('/login', (req, res)=>{
+  adminHelpers.doLogin(req.body).then((response)=>{
+    if(response.status){
+      req.session.adminLoggedIn = true;
+      res.redirect('/admin')
+    }else{
+      
+    }
+  }).catch((response)=>{
+      req.session.adminloginErr = "Username or password is incorrect"
+      res.redirect('/admin/login')
   })
 })
 
