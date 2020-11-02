@@ -131,6 +131,7 @@ router.post('/place-order',async (req, res)=>{
   let totalPrice = await userHelpers.getTotalAmount(req.body.userId)
   userHelpers.placeOrder(req.body, products, totalPrice).then((orderId)=>{
     if(req.body['payment-method']=='COD'){
+      req.session.user.orderId = orderId;
       res.json({codSuccess:true})
     }else if(req.body['payment-method']=='ONLINE'){
       userHelpers.generateRazorpay(orderId, totalPrice).then((response)=>{
