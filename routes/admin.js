@@ -36,18 +36,34 @@ router.get('/add-product', verifyAdmin, (req, res) => {
 
 router.post('/add-product', (req, res) => {
 
-  productHelpers.addProduct(req.body, (id) => {
-    let image = req.files.Image
-    image.mv('./public/product-images/' + id + '.jpg', (err, data) => {
-      if (!err) {
-        productHelpers.getAllProducts().then((products) => {
-          res.render('admin/show-products', {admin: true, products});
-        })
-      }
-    })
+  productHelpers.addProduct(req.body).then((id)=>{
+    let image1 = req.files.image1
+    let image2 = req.files.image2
+    let image3 = req.files.image3
+    let image4 = req.files.image4
 
-  })
+    
+    image1.mv('./public/product-images/' + id + '.jpg').then(()=>{
+      image2.mv('./public/product-images/' + id + '-1.jpg').then(()=>{
+        image3.mv('./public/product-images/' + id + '-2.jpg').then(()=>{
+          image4.mv('./public/product-images/' + id + '-3.jpg').then(()=>{
+            res.redirect('/admin')
+          })
+        })
+      })
+    })
+      
+    
 })
+})
+  
+  
+
+  
+  
+
+
+
 
 router.get('/delete-product/:id',(req, res)=>{
   let productID = req.params.id;

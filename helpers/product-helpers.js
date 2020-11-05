@@ -5,11 +5,12 @@ const collections = require('../config/collections');
 var objectId = require('mongodb').ObjectID;
 
 module.exports = {
-    addProduct: (product, callback) => {
-        console.log(product);
-        product.Price = parseInt(product.Price)
-        db.get().collection(collection.PRODUCT_COLLECTION).insertOne(product).then((data) => {
-            callback(data.ops[0]._id)
+    addProduct: (product) => {
+        return new Promise((resolve, reject) => {
+            product.Price = parseInt(product.Price)
+            db.get().collection(collection.PRODUCT_COLLECTION).insertOne(product).then((data) => {
+            resolve(data.ops[0]._id)
+            })
         })
     },
     getAllProducts: () => {

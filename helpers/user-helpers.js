@@ -1,7 +1,6 @@
 const db = require('../config/connection')
 var collection = require('../config/collections')
 const bcrypt = require('bcrypt')
-const collections = require('../config/collections');
 var objectId = require('mongodb').ObjectID;
 var Razorpay = require('razorpay')
 
@@ -43,11 +42,16 @@ module.exports = {
             }
         })
     },
-    addToCart:(productId, userId)=>{
+    addToCart:(productId, userId, count)=>{
+
+        count = parseInt(count)
+        console.log(count);
+
         let proObj = {
             item:objectId(productId),
-            quantity:1
+            quantity:parseInt(count)
         }
+        
         return new Promise (async(resolve, reject)=>{
             let userCart = await db.get().collection(collection.CART_COLLECTION).findOne({user:objectId(userId)})
         
@@ -58,7 +62,7 @@ module.exports = {
                     db.get().collection(collection.CART_COLLECTION)
                     .updateOne({user:objectId(userId),'products.item':objectId(productId)},
                     {
-                        $inc:{'products.$.quantity':1}
+                        $inc:{'products.$.quantity':count}
                     }
                         
                     ).then(()=>{
@@ -205,7 +209,7 @@ module.exports = {
                     }
                 },
                  { $addFields: {
-                convertprice: {$toInt: "$product.Price" }   
+                convertprice: {$toInt:"$product.Price" }   
              }
                 
             },
@@ -244,7 +248,8 @@ module.exports = {
             }   
             console.log(orderObj);
             db.get().collection(collection.ORDER_COLLECTION).insertOne(orderObj).then((response)=>{
-                db.get().collection(collection.CART_COLLECTION).removeOne({user:objectId(order.userId)})//removeing cart
+                console.log('order id'+response.ops[0]._id);
+                // db.get().collection(collection.CART_COLLECTION).removeOne({user:objectId(order.userId)})//removeing cart
                 resolve(response.ops[0]._id)
             })
         })
@@ -310,6 +315,9 @@ module.exports = {
               };
               instance.orders.create(options, function(err, order) {
                 console.log("New order:",order);
+                console.log('error', err);
+                db.get().collection(collection.CART_COLLECTION).removeOne({user:objectId(order.userId)})//removeing cart
+
                 resolve(order)
               });
         })
@@ -336,6 +344,7 @@ module.exports = {
         
     },
     changePaymentStatus:(orderId)=>{
+        console.log('chnage payment stus callled');
         return new Promise((resolve, reject) => {
             db.get().collection(collection.ORDER_COLLECTION)
             .updateOne({_id:objectId(orderId)},
@@ -345,6 +354,7 @@ module.exports = {
                 }
             }
             ).then(()=>{
+                
                 resolve()
             })
         })
@@ -357,6 +367,14 @@ module.exports = {
             console.log('order from orders')
             console.log(order)
             resolve(order)
+        })
+        
+    },
+    getSingleProduct:(productId)=>{
+        return new Promise(async(resolve, reject) => {
+            let productDetails = await db.get().collection(collection.PRODUCT_COLLECTION)
+            .findOne({_id:objectId(productId)})
+            resolve(productDetails)
         })
         
     }

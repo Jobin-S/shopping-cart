@@ -6,10 +6,10 @@
                 {{#each products}}
 
                 <div class="col-md-3 p-3">
-                    <div class="card " style="width: 15rem; height:23rem">
-                        <img src='/product-images/{{this._id}}.jpg'
+                    <div class="card " style="width: 15rem; height:23rem; text-align: center;">
+                        <a href="/product/{{this._id}}"><img src='/product-images/{{this._id}}.jpg'
                             class="card-img-top" alt="{{name}}"
-                            style="height: 14rem;">
+                            style="height: 14rem; width: auto;"></a>
                         <div class="card-body">
                             <h5 class="card-title">{{name}}</h5>
                             <p class="text-center card-text">Rs {{Price}}</p>

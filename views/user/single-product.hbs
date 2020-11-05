@@ -1,0 +1,84 @@
+<!--================Single Product Area =================-->
+<div class="product_image_area section_padding">
+  <div class="container">
+    <div class="row s_product_inner justify-content-between">
+      <div class="col-lg-7 col-xl-7">
+        <div class="product_slider_img">
+          <div id="vertical">
+            <div data-thumb="/product-images/{{product._id}}.jpg">
+              <img src="/product-images/{{product._id}}.jpg" />
+            </div>
+            <div data-thumb="/product-images/{{product._id}}-1.jpg">
+              <img src="/product-images/{{product._id}}-1.jpg" />
+            </div>
+            <div data-thumb="/product-images/{{product._id}}-2.jpg">
+              <img src="/product-images/{{product._id}}-2.jpg" />
+            </div>
+            <div data-thumb="/product-images/{{product._id}}-3.jpg">
+              <img src="/product-images/{{product._id}}-3.jpg" />
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-5 col-xl-4">
+        <div class="s_product_text">
+          <!-- <h5>previous <span>|</span> next</h5> -->
+          <h3>{{product.name}}</h3>
+          <h2>{{product.Price}}</h2>
+          <ul class="list">
+            <li>
+              <a class="active" href="#">
+                <span>Category</span> : {{product.Category}}</a>
+            </li>
+            <li>
+              <a href="#"> <span>Availibility</span> : In Stock</a>
+            </li>
+          </ul>
+          <p>
+            {{product.Discription}}
+          </p>
+          <div class="card_area d-flex justify-content-between align-items-center">
+            <div class="product_count">
+              <span class="inumber-decrement"> <i class="ti-minus"></i></span>
+              <input class="input-number" id="quantity" type="text" value="1" min="0" max="10">
+              <span class="number-increment"> <i class="ti-plus"></i></span>
+            </div>
+            <button id="addCartBtn" onclick="addToCartPost('{{product._id}}')" class="btn_3"><span id="addCart">add to
+                cart</span></button>
+            <a href="#" class="like_us"> <i class="ti-heart"></i> </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<!--================End Single Product Area =================-->
+
+<script>
+  function addToCartPost(productId) {
+    console.log('add to cart')
+    let quantity = document.getElementById('quantity').value
+    $.ajax({
+      url: '/add-to-cart',
+      method: 'post',
+      data: {
+        id: productId,
+        count: quantity
+      },
+      success: (response) => {
+        if (response.status) {
+          console.log('addded '+ quantity)
+          document.getElementById("addCart").innerText = 'go to cart'
+          document.getElementById("addCartBtn").onclick = goCart;
+          //$("#addCartBtn").click(function () {
+            
+          //});
+        }
+      }
+    })
+  }
+
+  function goCart(){
+    location.href = '/cart'
+  }
+</script>

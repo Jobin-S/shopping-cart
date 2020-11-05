@@ -3,6 +3,12 @@ var express = require('express');
 var router = express.Router();
 var productHelpers = require('../helpers/product-helpers')
 var userHelpers = require('../helpers/user-helpers')
+const db = require('../config/connection')
+var collection = require('../config/collections')
+var objectId = require('mongodb').ObjectID;
+
+
+
 
 
 const verifyLogin = (req, res, next)=>{
@@ -21,6 +27,7 @@ router.get('/',async function (req, res, next) {
     cartCount = await userHelpers.getCartCount(req.session.user._id)
   }
   productHelpers.getAllProducts().then((products) => {
+    console.log(cartCount);
     res.render('user/view-products', { products, user, cartCount });
     console.log(user);
   })  
@@ -85,14 +92,29 @@ router.get('/cart',verifyLogin,async (req, res)=>{
   if(products.length>0){
     total = await userHelpers.getTotalAmount(req.session.user._id)
   }
-  res.render('user/cart', {user, products, total})
+  let cartCount = null;
+  if(user){
+    cartCount = await userHelpers.getCartCount(req.session.user._id)
+  }
+  res.render('user/cart', {user, products, total, cartCount})
 })
 
 router.get('/add-to-cart/:id', (req, res)=>{
   console.log('api call');
   console.log(req.session.user);
   if(req.session.userLoggedIn){
-    userHelpers.addToCart(req.params.id, req.session.user._id).then(()=>{
+    userHelpers.addToCart(req.params.id, req.session.user._id, 1).then(()=>{
+      res.json({status:true})
+    })
+  }else if(req.session.user == undefined){
+    res.redirect('/login')
+  }
+})
+
+router.post('/add-to-cart', (req, res)=>{
+  if(req.session.userLoggedIn){
+    console.log(req.body.count);
+    userHelpers.addToCart(req.body.id, req.session.user._id, req.body.count).then(()=>{
       res.json({status:true})
     })
   }else if(req.session.user == undefined){
@@ -117,10 +139,14 @@ router.post('/remove-item',(req, res)=>{
 
 router.get('/place-order',verifyLogin,async(req, res)=>{
   let user = req.session.user
+  let cartCount = null;
+  if(user){
+    cartCount = await userHelpers.getCartCount(req.session.user._id)
+  }
   let total = await userHelpers.getTotalAmount(user._id)
   userHelpers.getCartProducts(user._id).then((cartItems)=>{
     console.log(cartItems)
-    res.render('user/place-order', {user, total, cartItems})
+    res.render('user/place-order', {user, total, cartItems, cartCount})
 
   })
 
@@ -132,6 +158,7 @@ router.post('/place-order',async (req, res)=>{
   userHelpers.placeOrder(req.body, products, totalPrice).then((orderId)=>{
     if(req.body['payment-method']=='COD'){
       req.session.user.orderId = orderId;
+      db.get().collection(collection.CART_COLLECTION).removeOne({user:objectId(req.session.user._id)})//removeing cart
       res.json({codSuccess:true})
     }else if(req.body['payment-method']=='ONLINE'){
       userHelpers.generateRazorpay(orderId, totalPrice).then((response)=>{
@@ -160,11 +187,16 @@ router.get('/confirm-order',verifyLogin, (req, res)=>{
 })
 
 router.get('/orders',async (req,res)=>{
+  
   if(req.session.userLoggedIn){
     let orders =await userHelpers.getUserOrders(req.session.user._id)
     console.log(orders)
     orders.reverse()
-    res.render('user/orders', {user:req.session.user, orders})
+    let cartCount = null;
+  if(req.session.user){
+    cartCount = await userHelpers.getCartCount(req.session.user._id)
+  }
+    res.render('user/orders', {user:req.session.user, orders, cartCount})
   }else{
     res.redirect('/login')
   }
@@ -192,4 +224,18 @@ router.post('/verify-payment',(req, res)=>{
   })
 
 })
+
+router.get('/product/:id',async (req, res)=>{
+  let productId = req.params.id
+  let cartCount = null;
+  if(req.session.user){
+    cartCount = await userHelpers.getCartCount(req.session.user._id)
+  }
+  userHelpers.getSingleProduct(productId).then((product)=>{
+    console.log(product);
+    
+    res.render('user/single-product', {user:req.session.user, product, cartCount})
+  })
+})
+
 module.exports = router;
