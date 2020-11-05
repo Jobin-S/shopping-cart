@@ -179,8 +179,9 @@ router.get('/confirm-order',verifyLogin, (req, res)=>{
     }else{
       userHelpers.getSingleOrder(req.session.user.orderId).then(async (order)=>{
         let products =await userHelpers.getOrderProducts(req.session.user.orderId)
-        
+
           res.render('user/confirm-order',{user:req.session.user, order, products})
+          db.get().collection(collection.CART_COLLECTION).removeOne({user:objectId(req.session.user._id)})//removeing cart
           req.session.user.orderId = null;
         })     
     }

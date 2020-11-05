@@ -316,9 +316,10 @@ module.exports = {
               instance.orders.create(options, function(err, order) {
                 console.log("New order:",order);
                 console.log('error', err);
-                db.get().collection(collection.CART_COLLECTION).removeOne({user:objectId(order.userId)})//removeing cart
+                    resolve(order)
+                
 
-                resolve(order)
+                
               });
         })
         
