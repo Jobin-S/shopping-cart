@@ -26,3 +26,57 @@
             }
           
           }
+
+          
+
+          function applyCoupon() {
+            let coupontext = document.getElementById('couponText').value
+            console.log(coupontext)
+            $.ajax({
+                url: '/coupon',
+                method: 'POST',
+                data: {
+                    coupon: coupontext
+                },
+                success: (response) => {
+                  let statusDiv = document.getElementById('couponStatus')
+                  let statusDivFailed = document.getElementById('couponStatus_failed')
+                    if(response.status){
+                      statusDivFailed.style.display = 'none'
+                      statusDiv.style.display = 'block'
+                      let offerPrice = response.offerPrice;
+
+                      var oldSubtotal  = strikePrice('subTotal')
+
+                      document.getElementById('discountPrice').textContent = oldSubtotal-offerPrice   
+                      
+                      let discountLi = document.getElementById('discountPrice_li')
+                      discountLi.style.display = 'block'
+                      total(parseInt(oldSubtotal-offerPrice))
+
+                      let couponCode = response.details.couponCode
+                      console.log(couponCode)
+                      let couponStatusMsg = document.getElementById('couponStatus_h2')
+                      couponStatusMsg.textContent = `coupon applied : ${couponCode}`
+                      
+                      
+                    }else{
+                      statusDiv.style.display = 'none'
+                      statusDivFailed.style.display = 'block'
+                    }
+                  }
+            })
+        }
+
+        function strikePrice(id){
+          let oldSubtotal = document.getElementById(id).textContent
+          document.getElementById(id).textContent = ''
+          var strikeElement = document.createElement("s");
+          var node = document.createTextNode(oldSubtotal);
+          strikeElement.appendChild(node)
+          var spanElement = document.getElementById(id);
+          spanElement.appendChild(strikeElement)
+          return oldSubtotal
+        }
+
+        

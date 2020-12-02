@@ -2,7 +2,8 @@ const db = require('../config/connection')
 var collection = require('../config/collections')
 const bcrypt = require('bcrypt')
 var objectId = require('mongodb').ObjectID;
-var Razorpay = require('razorpay')
+var Razorpay = require('razorpay');
+const collections = require('../config/collections');
 
 var instance = new Razorpay({
     key_id: 'rzp_test_lWAtz2c0Foyv22',
@@ -84,7 +85,10 @@ module.exports = {
 
                 let cartObj = {
                     user:objectId(userId),
-                    products:[proObj]
+                    products:[proObj],
+                    discountPrice:0,
+                    couponApplied:false,
+                    coupon:null
                 }
 
                 db.get().collection(collection.CART_COLLECTION).insertOne(cartObj).then((response)=>{
@@ -144,14 +148,16 @@ module.exports = {
         count = parseInt(details.count)
         return new Promise((resolve, reject)=>{
             if(details.count==-1 && details.quantity==1){
-                db.get().collection(collection.CART_COLLECTION)
-                .updateOne({'_id':objectId(details.cart)},
-                {
-                    $pull: {'products':{item:objectId(details.product)}}
-                }
-                ).then((response)=>{
-                    resolve({removeProduct:true, productId:details.productId})
-                })
+                // db.get().collection(collection.CART_COLLECTION)
+                // .updateOne({'_id':objectId(details.cart)},
+                // {
+                //     $pull: {'products':{item:objectId(details.product)}}
+                // }
+                // ).then((response)=>{
+                //     resolve({removeProduct:true, productId:details.productId})
+                // })
+                resolve({removeProduct:true, productId:details.productId})
+                
             }else{
                 db.get().collection(collection.CART_COLLECTION)
                     .updateOne({_id:objectId(details.cart),'products.item':objectId(details.product)},
@@ -226,8 +232,9 @@ module.exports = {
             resolve(total[0].total)
         })
     },
-    placeOrder:(order, products, total)=>{
+    placeOrder:(order, products, total, offerPrice)=>{
         return new Promise((resolve, reject) => {
+            offerPrice = parseInt(offerPrice)
             let status = order['payment-method']==="COD"?'placed':'pending'
             let orderObj = {
                 deliveryDetails:{
@@ -242,7 +249,9 @@ module.exports = {
                 userId:objectId(order.userId),
                 paymentMethod:order['payment-method'],
                 products:products,
-                totalAmount:total,
+                totalAmount:(total-offerPrice)+80,
+                discountByCoupon:offerPrice,
+                deliverCharge:80,
                 status:status,
                 date: new Date()
             }   
@@ -306,10 +315,10 @@ module.exports = {
             resolve(orderItem)
         })
     },
-    generateRazorpay:(orderId, totalPrice)=>{
+    generateRazorpay:(orderId, totalPrice, offerPrice)=>{
         return new Promise((resolve, reject) => {
             var options = {
-                amount: totalPrice*100,  // amount in the smallest currency unit
+                amount: ( (totalPrice*100) - (offerPrice*100) ) + 8000,  // amount in the smallest currency unit
                 currency: "INR",
                 receipt: ""+orderId 
               };
@@ -378,5 +387,77 @@ module.exports = {
             resolve(productDetails)
         })
         
+    },
+    VerifyCoupon: (couponCode, userId)=>{
+        console.log(392);
+        return new Promise(async(resolve, reject) => {
+            console.log(398);
+            let coupon = await db.get().collection(collection.COUPON_COLLECTION).findOne({couponCode:couponCode})
+            
+              
+    
+            
+            console.log(coupon);
+            if (coupon){
+                resolve(coupon)
+            }else{
+                db.get().collection(collections.CART_COLLECTION)
+                    .updateOne({user:objectId(userId)},
+                    {
+                        $set:{
+                            discountPrice:0
+                        }
+                    }
+                    ).then(()=>{
+                        reject()
+                    })
+                
+            }
+            
+        })
+        
+    },
+    couponPrice:(details, userId, cartPrice, couponCode)=>{
+        return new Promise((resolve, reject) => {
+            if(cartPrice >= details.minPurchase){
+                details.offerPrice = parseInt(details.offerPrice)
+                let discountPercentagePrice  = (details.offerPercentage/100)*cartPrice
+                if(discountPercentagePrice >= details.maximumAmount){
+                    db.get().collection(collections.CART_COLLECTION)
+                    .updateOne({user:objectId(userId)},
+                    {
+                        $set:{
+                            discountPrice:details.maximumAmount,
+                            couponApplied:true,
+                            coupon:couponCode
+                        }
+                    }
+                    ).then(()=>{
+                        console.log('added discount'+details.maximumAmount)
+                        resolve(details.maximumAmount)
+                    })
+                }
+            }else{
+                console.log('rejected');
+                reject()
+            }
+        })
+        
+    },
+    isCouponAvailable:(userId)=>{
+        return new Promise(async(resolve, reject) => {
+            let status = await db.get().collection(collection.CART_COLLECTION).find({user:objectId(userId), couponApplied:true}).toArray()
+            console.log(status);
+            if(status.length == 0){
+                console.log('coupon not applied '+userId);
+                resolve({status:false})
+            }else{
+                console.log('coupon applied '+userId);
+                resolve({status:true})                
+            }
+        })
+        
     }
+        
+    
 }

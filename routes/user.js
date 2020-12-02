@@ -88,6 +88,7 @@ router.get('/logout',(req,res)=>{
 router.get('/cart',verifyLogin,async (req, res)=>{
   let user = req.session.user;
   let products = await userHelpers.getCartProducts(req.session.user._id)
+  console.log(products);
   let total = 0;
   if(products.length>0){
     total = await userHelpers.getTotalAmount(req.session.user._id)
@@ -146,7 +147,23 @@ router.get('/place-order',verifyLogin,async(req, res)=>{
   let total = await userHelpers.getTotalAmount(user._id)
   userHelpers.getCartProducts(user._id).then((cartItems)=>{
     console.log(cartItems)
-    res.render('user/place-order', {user, total, cartItems, cartCount})
+    userHelpers.isCouponAvailable(user._id).then((response)=>{
+      console.log('coupon available: '+response.status);
+      let coupon = {
+        status:false
+      }
+      if(response.status){
+        coupon = {
+          details:req.session.user.couponDetails,
+          offerPrice:req.session.user.offerPrice,
+          status:true
+        }
+        console.log(coupon);
+      }
+        
+      
+      res.render('user/place-order', {user, total, cartItems, cartCount, coupon})
+    })
 
   })
 
@@ -155,13 +172,16 @@ router.get('/place-order',verifyLogin,async(req, res)=>{
 router.post('/place-order',async (req, res)=>{
   let products = await userHelpers.getCartProductList(req.body.userId)
   let totalPrice = await userHelpers.getTotalAmount(req.body.userId)
-  userHelpers.placeOrder(req.body, products, totalPrice).then((orderId)=>{
+  let offerPrice = req.session.user.offerPrice
+
+  userHelpers.placeOrder(req.body, products, totalPrice, offerPrice).then((orderId)=>{
     if(req.body['payment-method']=='COD'){
       req.session.user.orderId = orderId;
       db.get().collection(collection.CART_COLLECTION).removeOne({user:objectId(req.session.user._id)})//removeing cart
       res.json({codSuccess:true})
     }else if(req.body['payment-method']=='ONLINE'){
-      userHelpers.generateRazorpay(orderId, totalPrice).then((response)=>{
+      
+      userHelpers.generateRazorpay(orderId, totalPrice, offerPrice).then((response)=>{
         res.json(response)
       })
     }else{
@@ -183,6 +203,8 @@ router.get('/confirm-order',verifyLogin, (req, res)=>{
           res.render('user/confirm-order',{user:req.session.user, order, products})
           db.get().collection(collection.CART_COLLECTION).removeOne({user:objectId(req.session.user._id)})//removeing cart
           req.session.user.orderId = null;
+          req.session.user.couponDetails = null
+          req.session.user.offerPrice = null
         })     
     }
 })
@@ -237,6 +259,36 @@ router.get('/product/:id',async (req, res)=>{
     
     res.render('user/single-product', {user:req.session.user, product, cartCount})
   })
+})
+
+
+
+
+router.post('/coupon', (req, res)=>{
+  let couponCode = req.body.coupon.toUpperCase();
+  console.log(couponCode);
+userHelpers.VerifyCoupon(couponCode, req.session.user._id)
+    .then(async(details)=>{
+      console.log('available');
+      let response = {
+        status:true,
+        details:details
+      }
+
+      let userId = req.session.user._id
+      let cartPrice = await userHelpers.getTotalAmount(userId)
+
+      userHelpers.couponPrice(details, userId, cartPrice, couponCode).then((offerPrice)=>{
+        req.session.user.offerPrice = offerPrice
+        req.session.user.couponDetails = details
+        response.offerPrice = offerPrice
+        res.json(response)
+      })
+      
+    })
+    .catch(()=>{
+      res.json({status:false})
+    })
 })
 
 module.exports = router;

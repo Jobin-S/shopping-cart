@@ -134,4 +134,14 @@ router.post('/login', (req, res)=>{
   })
 })
 
+router.get('/add-coupon', (req, res)=>{
+  res.render('admin/add-coupon')
+})
+
+router.post('/add-coupon',(req, res)=>{
+  adminHelpers.addCoupon(req.body).then(()=>{
+    res.redirect('/admin')
+  })
+})
+
 module.exports = router;

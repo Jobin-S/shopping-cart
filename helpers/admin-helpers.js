@@ -39,5 +39,23 @@ module.exports = {
                 reject({status:false})
             }
         })
+    },
+    addCoupon:(details)=>{
+        return new Promise((resolve, reject) => {
+            console.log(details);
+            couponObj = {
+
+                title:details.title,
+                couponCode:details.coupon_code,
+                offerPercentage:details.offer_percentage,
+                maximumAmount:details.max_amount,
+                minPurchase:details.min_purchase,
+                description:details.des
+            }
+            db.get().collection(collection.COUPON_COLLECTION).insertOne(couponObj).then(()=>{
+                resolve()
+            })
+        })
+        
     }
 }
