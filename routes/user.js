@@ -83,7 +83,9 @@ router.get('/logout',(req,res)=>{
   res.redirect('/')
 })
 
-
+router.get('/empty_cart', (req, res) => {
+  res.render('user/empty_cart');
+})
 
 router.get('/cart',verifyLogin,async (req, res)=>{
   let user = req.session.user;
@@ -92,6 +94,8 @@ router.get('/cart',verifyLogin,async (req, res)=>{
   let total = 0;
   if(products.length>0){
     total = await userHelpers.getTotalAmount(req.session.user._id)
+  }else {
+    res.redirect('/empty_cart')
   }
   let cartCount = null;
   if(user){
